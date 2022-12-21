@@ -23,6 +23,9 @@
     <Text Include="ipsumlorem.txt">
       <Filter>Resource Files</Filter>
     </Text>
+    <Text Include="lorem.txt">
+      <Filter>Resource Files</Filter>
+    </Text>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="tb_ranges.h">

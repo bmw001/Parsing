@@ -14,6 +14,7 @@
 #include <execution>
 
 #include <vector>
+#include <array>
 #include <set>
 
 #include <iterator>
@@ -33,7 +34,7 @@ namespace ex        = std::execution ;
 
 using keyword       = std::set<std::string> ;
 
-const keyword BasicKeyWords
+const keyword BasicKeyWords =
 {
     "and","and_eq","asm","auto",
     "bitand","bitor","bool","break",
@@ -126,94 +127,14 @@ std::string alnum(std::string s)
     return s.substr(0, i);
 };
 
-/*
-
-template < std::ranges::view V, typename Pred>
-    requires    std::ranges::bidirectional_range<V> &&
-                std::indirect_unary_predicate<Pred, std::ranges::iterator_t<V>>
-class drop_last_while_view
-    : public std::ranges::view_interface < drop_last_while_view<V, Pred>>
-{
-    V       base_ ;
-    Pred    pred_ ;
-    std::optional<std::ranges::iterator_t<V>> cached_end_ ;
-
-public:
-    drop_last_while_view() = default;
-
-    drop_last_while_view(V base, Pred pred)
-        : base_(std::move(base)),
-        pred_(std::move(pred))
-    {}
-
-    auto begin() { return std::ranges::begin(base_); }
-
-    auto end() {
-        if (!cached_end_) {
-            auto view   = std::views::reverse(base_) ;
-            cached_end_ = std::ranges::find_if_not(view, pred_).base() ;
-        }
-        return *cached_end_;
-    }
-};
-
-
-namespace my_views {
-    struct drop_last_while_fn
-    {
-        template <std::ranges::viewable_range R, typename Pred>
-        constexpr auto operator()(R&& r, Pred pred) const
-            -> drop_last_while_view<std::views::all_t<R>, Pred>
-        {
-            return drop_last_while_view<std::views::all_t<R>, Pred>
-                (std::views::all(std::forward<R>(r)), std::move(pred));
-        }
-    };
-
-    inline constexpr auto drop_last_while = drop_last_while_fn{};
-};
-
-
-
-inline constexpr auto trim_front = views::drop_while(::isalnum);
-
-inline constexpr auto trim_back = drop_last_while(::isalnum);
-
-inline constexpr auto trim = trim_front | trim_back;
-*/
-
-template <typename R>
-auto trim_front(R&& rng)
-{
-    return views::drop_while(std::forward<R>(rng), ::isalnum);
-//  return std::forward<R>(rng) | std::views::drop_while(!isalnum); // ez is jó
-}
-
-template <typename R>
-auto trim_back(R&& rng) 
-{
-    return forward<R>(rng)
-        | std::views::reverse
-        | std::views::drop_while(::isalnum)
-        | std::views::reverse;
-}
-
-template <typename R>
-auto trim(R&& rng)
-{
-    return trim_back(trim_front(std::forward<R>(rng)));
-}
-
-std::string trim_str(const std::string& str)
-{
-    return str | trim | std::ranges::to<std::string>;
-}
 
 int main()
 {
     char ex_elem{ 'a' } ;
-    keyword KeyWords = BasicKeyWords + CPP11KeyWords + CPP20KeyWords + OtherKeyWords;
+    const keyword KeyWords = BasicKeyWords + CPP11KeyWords + CPP20KeyWords + OtherKeyWords;
     std::vector<std::string> Word_flow;
+
+
 
     for ( const auto elem : KeyWords ) 
     {
@@ -241,28 +162,22 @@ int main()
     auto loremipsum = std::ranges::istream_view<std::string>(words) ;
     auto ipsumlorem = std::ostream_iterator<std::string>(std::cout, " ") ;
 
-  /*    auto takeWhileAlnum = [](std::string text) mutable
-    { return text
-        //      | std::views::common 
-        | std::views::take_while([](char c) { return std::isalnum(c); })
-        | std::ranges::to<std::string> ;
-
-    };
-  */
-
-    
-
+    auto alnum = [](std::string s) 
+                {
+                    return std::views::all(s)
+                        | std::views::take_while(::isalnum)
+                        | std::ranges::to<std::string>();
+                };
 
 
     auto hogwash = loremipsum
-        | std::views::transform(alnum)
+        | std::views::transform( [](std::string s) {
+                    return std::views::all(s)
+                        | std::views::take_while(::isalnum)
+                        | std::ranges::to<std::string>();
+                    } )
         | std::views::take(10);
         
-/*
-    for (auto i : hogwash) {
-        std::cout << i << "\n";
-    };
-*/
     std::ranges::copy(hogwash, ipsumlorem);
 
     /*
@@ -271,6 +186,31 @@ int main()
     }
     */
  
+    std::array<unsigned int, 256> FrequencyByChar{};
+    
+    auto lorem = std::ifstream("lorem.txt");
+    lorem.unsetf(std::ios_base::skipws);
+    auto ipsum = std::ranges::istream_view<char>(lorem);
+
+//  std::transform(std::istreambuf_iterator<char>(lorem),
+//  std::istreambuf_iterator<char>(),
+//  std::ostreambuf_iterator<char>(std::cout),
+//  [](int ch) { return isupper(ch) ? ((ch - 'A') + 3) % 26 + 'A' : ch; });
+    
+    for (auto c : ipsum) {
+        std::cout << c;
+        ++FrequencyByChar[c];
+    }
+
+    auto sum = std::accumulate(FrequencyByChar.begin(), FrequencyByChar.end(), 0);
+
+    for (int i = 0; i < 256; ++i)  {
+        if (FrequencyByChar[i] != 0) {
+            std::cout << "\n" << i << "   " << char(i) << "   " << FrequencyByChar[i] ;
+        }
+    }
+
+    return 0;
 
 }
 

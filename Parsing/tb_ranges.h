@@ -114,7 +114,7 @@ auto sumsq = accumulate(view);
 auto vec = get_input();
 auto sumsq = accumulate(
 	vec | views::transform([](int i) { return i * i; }));
-);
+	);
 //
 //  G. with projection -> transform(square) lambda
 // 
@@ -229,12 +229,11 @@ Init accumulate(R&& rng, Init init = Init{}, Op op = Op{})
 	return accumulate(rng::begin(rng), rng::end(rng),
 		std::move(init), std::move(op));
 }
-//-------------------------------------------------------
-//				Projections
+//------------------Projections-----------------------
 //	
 // Almost all of the standard library rangified algorithms
 // take function objects. They take a new extra optional
-// parameter called a projection. 
+// parameter called: projection. 
 // 
 // Projections are function adaptors. Projections do not
 // change the algorithm. Projections are a simply convenient 
@@ -282,3 +281,86 @@ Init accumulate(R&& rng, Init init = Init{},
 		std::move(init), std::move(op),
 		std::move(proj));
 }
+/*
+
+template < std::ranges::view V, typename Pred>
+	requires    std::ranges::bidirectional_range<V> &&
+				std::indirect_unary_predicate<Pred, std::ranges::iterator_t<V>>
+class drop_last_while_view
+	: public std::ranges::view_interface < drop_last_while_view<V, Pred>>
+{
+	V       base_ ;
+	Pred    pred_ ;
+	std::optional<std::ranges::iterator_t<V>> cached_end_ ;
+
+public:
+	drop_last_while_view() = default;
+
+	drop_last_while_view(V base, Pred pred)
+		: base_(std::move(base)),
+		pred_(std::move(pred))
+	{}
+
+	auto begin() { return std::ranges::begin(base_); }
+
+	auto end() {
+		if (!cached_end_) {
+			auto view   = std::views::reverse(base_) ;
+			cached_end_ = std::ranges::find_if_not(view, pred_).base() ;
+		}
+		return *cached_end_;
+	}
+};
+
+
+namespace my_views {
+	struct drop_last_while_fn
+	{
+		template <std::ranges::viewable_range R, typename Pred>
+		constexpr auto operator()(R&& r, Pred pred) const
+			-> drop_last_while_view<std::views::all_t<R>, Pred>
+		{
+			return drop_last_while_view<std::views::all_t<R>, Pred>
+				(std::views::all(std::forward<R>(r)), std::move(pred));
+		}
+	};
+
+	inline constexpr auto drop_last_while = drop_last_while_fn{};
+};
+
+
+
+inline constexpr auto trim_front = views::drop_while(::isalnum);
+
+inline constexpr auto trim_back = drop_last_while(::isalnum);
+
+inline constexpr auto trim = trim_front | trim_back;
+*/
+/*
+template <typename R>
+auto trim_front(R&& rng)
+{
+	return views::drop_while(std::forward<R>(rng), ::isalnum);
+//  return std::forward<R>(rng) | std::views::drop_while(!isalnum); // ez is jó
+}
+
+template <typename R>
+auto trim_back(R&& rng)
+{
+	return forward<R>(rng)
+		| std::views::reverse
+		| std::views::drop_while(::isalnum)
+		| std::views::reverse;
+}
+
+template <typename R>
+auto trim(R&& rng)
+{
+	return trim_back(trim_front(std::forward<R>(rng)));
+}
+
+std::string trim_str(const std::string& str)
+{
+	return str | trim | std::ranges::to<std::string>;
+}
+*/
