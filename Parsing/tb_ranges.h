@@ -144,7 +144,7 @@ auto sumsq = accumulate(get_input(), {}, {},
 template <typename I, typename Init>
 Init accumulate(I first, I last, Init init)
 {
-	while (forst != last) {
+	while (first != last) {
 		init = std::move(init) + *first;
 		++first;
 	}
@@ -253,10 +253,11 @@ Init accumulate(R&& rng, Init init = Init{}, Op op = Op{})
 //
 // G. - Projection - non-range
 // 
-template <std::input_iterator I, std::sentinel_for<I> S,
-	typename Init = std::iter_value_t<I>,
-	typename Op = std::plus<>,
-	typename Proj = std::identity> // default op.: identity -> to do nothing
+template<std::input_iterator I, 
+		std::sentinel_for<I> S,
+		typename Init = std::iter_value_t<I>,
+		typename Op = std::plus<>,
+		typename Proj = std::identity> // default op.: identity -> to do nothing
 Init accumulate(I first, S last, Init init = Init{},
 	Op op = Op{}, Proj proj = Proj{})
 {
@@ -271,9 +272,9 @@ Init accumulate(I first, S last, Init init = Init{},
 // H. - Projection - range
 // 
 template <rng::input_range R,
-	typename Init = rng::range_value_t<R>,
-	typename Op = std::plus<>,
-	typename Proj = std::identity>
+		typename Init = rng::range_value_t<R>,
+		typename Op = std::plus<>,
+		typename Proj = std::identity>
 Init accumulate(R&& rng, Init init = Init{},
 	Op op = Op{}, Proj proj = Proj{})
 {

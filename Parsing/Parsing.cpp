@@ -20,7 +20,7 @@
 #include <iterator>
 #include <ranges>
 
-#include<optional>
+#include <optional>
 
 namespace ranges    = std::ranges ;
 namespace stdr      = std::ranges ;
@@ -32,9 +32,9 @@ namespace vws       = std::views;
 
 namespace ex        = std::execution ;
 
-using keyword       = std::set<std::string> ;
+using keyword       = std::vector<std::string> ;
 
-const keyword BasicKeyWords =
+const keyword BasicKeyWords 
 {
     "and","and_eq","asm","auto",
     "bitand","bitor","bool","break",
@@ -58,7 +58,7 @@ const keyword BasicKeyWords =
     "xor_eq"
 } ;
 
-const keyword CPP11KeyWords
+const keyword CPP11KeyWords 
 {
     "alignas","alignof",
     "char16_t","char32_t","constexpr",
@@ -80,12 +80,15 @@ const keyword OtherKeyWords
     "reflexpr"
 } ;
 
+// const keyword KeyWords = ( BasicKeyWords )/*  + OtherKeyWords */;
+// std::ranges::sort(KeyWords) ;
 
+/*
 keyword operator+(const keyword& lhs, const keyword& rhs)
 {
     keyword unio = lhs;
 
-    for (const auto elem : rhs)
+    for (const auto& elem : rhs)
     {
         unio.insert(elem);
     }
@@ -93,6 +96,7 @@ keyword operator+(const keyword& lhs, const keyword& rhs)
     return std::move(unio);
 
 } ;
+*/
 
 std::size_t word_count( std::string_view s )
 {
@@ -130,13 +134,12 @@ std::string alnum(std::string s)
 
 int main()
 {
-    char ex_elem{ 'a' } ;
-    const keyword KeyWords = BasicKeyWords + CPP11KeyWords + CPP20KeyWords + OtherKeyWords;
+    keyword KeyWords = BasicKeyWords /* + CPP11KeyWords + CPP20KeyWords + OtherKeyWords */;
+    std::ranges::sort(KeyWords);
     std::vector<std::string> Word_flow;
+    char ex_elem{};
 
-
-
-    for ( const auto elem : KeyWords ) 
+    for ( const auto& elem : KeyWords ) 
     {
         if ( elem[0] != ex_elem ) std::cout << "\n" ;
 
@@ -152,31 +155,18 @@ int main()
     }
 
     auto words = std::ifstream(input_file_name) ;
-   /*   
-   for (const auto& s : std::ranges::istream_view<std::string>(words)) {
-        std::cout << std::quoted(s, '/') << ' ';
-    }
-    std::cout << '\n';
-    */
     
     auto loremipsum = std::ranges::istream_view<std::string>(words) ;
     auto ipsumlorem = std::ostream_iterator<std::string>(std::cout, " ") ;
-
-    auto alnum = [](std::string s) 
-                {
-                    return std::views::all(s)
-                        | std::views::take_while(::isalnum)
-                        | std::ranges::to<std::string>();
-                };
-
 
     auto hogwash = loremipsum
         | std::views::transform( [](std::string s) {
                     return std::views::all(s)
                         | std::views::take_while(::isalnum)
                         | std::ranges::to<std::string>();
-                    } )
+            })
         | std::views::take(10);
+
         
     std::ranges::copy(hogwash, ipsumlorem);
 
@@ -197,9 +187,9 @@ int main()
 //  std::ostreambuf_iterator<char>(std::cout),
 //  [](int ch) { return isupper(ch) ? ((ch - 'A') + 3) % 26 + 'A' : ch; });
     
-    for (auto c : ipsum) {
+    for (const auto c : ipsum) {
         std::cout << c;
-        ++FrequencyByChar[c];
+        ++FrequencyByChar[static_cast<unsigned>(c)];
     }
 
     auto sum = std::accumulate(FrequencyByChar.begin(), FrequencyByChar.end(), 0);
