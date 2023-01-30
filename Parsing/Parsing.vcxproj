@@ -129,6 +129,8 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="huffman.cpp" />
+    <ClCompile Include="matrix.cpp" />
+    <ClCompile Include="multi_array.cpp" />
     <ClCompile Include="Parsing.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -137,6 +139,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="huffman.h" />
+    <ClInclude Include="matrix.h" />
+    <ClInclude Include="multi_array.h" />
     <ClInclude Include="tb_ranges.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
